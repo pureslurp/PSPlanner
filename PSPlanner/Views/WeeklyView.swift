@@ -1,0 +1,118 @@
+import SwiftUI
+import SwiftData
+
+struct WeeklyView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Task.createdAt, order: .reverse) private var allTasks: [Task]
+    
+    @State private var currentWeek = Date()
+    @State private var showingCategories = false
+    
+    private var weeklyTasks: [Task] {
+        allTasks.filter { task in
+            // Weekly tasks: show if incomplete (carry forward) OR completed this week
+            if task.taskType == .weekly {
+                if !task.isCompleted {
+                    // Incomplete weekly tasks always show (carry forward)
+                    return true
+                } else if let completedAt = task.completedAt, completedAt.isInWeek(of: currentWeek) {
+                    // Completed weekly tasks show only in the week they were completed
+                    return true
+                }
+            }
+            
+            // Deadline promotion: show monthly tasks with deadline this week
+            if task.taskType == .monthly, let deadline = task.deadline, deadline.isInWeek(of: currentWeek) {
+                return true
+            }
+            
+            return false
+        }
+    }
+    
+    private var incompleteTasks: [Task] {
+        weeklyTasks.filter { !$0.isCompleted }
+    }
+    
+    private var completedTasks: [Task] {
+        weeklyTasks.filter { $0.isCompleted }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                WeekSelector(
+                    currentDate: $currentWeek,
+                    mode: .weekly
+                )
+                .padding()
+                .background(Color(.systemBackground))
+                
+                if weeklyTasks.isEmpty {
+                    EmptyTasksView(
+                        icon: "calendar",
+                        message: "No tasks this week",
+                        submessage: "Tap + to add your first task"
+                    )
+                } else {
+                    List {
+                        if !incompleteTasks.isEmpty {
+                            Section {
+                                ForEach(incompleteTasks) { task in
+                                    TaskRow(task: task)
+                                }
+                                .onDelete(perform: deleteIncompleteTasks)
+                            }
+                        }
+                        
+                        if !completedTasks.isEmpty {
+                            Section("Completed") {
+                                ForEach(completedTasks) { task in
+                                    TaskRow(task: task)
+                                }
+                                .onDelete(perform: deleteCompletedTasks)
+                            }
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("This Week")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showingCategories = true
+                        } label: {
+                            Label("Manage Categories", systemImage: "folder")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingCategories) {
+                CategoriesView()
+            }
+        }
+    }
+    
+    private func deleteIncompleteTasks(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(incompleteTasks[index])
+        }
+    }
+    
+    private func deleteCompletedTasks(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(completedTasks[index])
+        }
+    }
+}
+
+#Preview {
+    WeeklyView()
+        .modelContainer(for: [Task.self, Category.self], inMemory: true)
+}
+
+

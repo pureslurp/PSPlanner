@@ -12,9 +12,17 @@ import SwiftData
 struct PSPlannerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Task.self,
+            Category.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
+        // Local storage only (CloudKit requires paid Apple Developer Program)
+        // To enable iCloud sync later, change cloudKitDatabase to .automatic
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .none
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -25,7 +33,7 @@ struct PSPlannerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
         .modelContainer(sharedModelContainer)
     }
