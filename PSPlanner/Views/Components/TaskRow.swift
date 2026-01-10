@@ -3,6 +3,7 @@ import SwiftData
 
 struct TaskRow: View {
     @Bindable var task: Task
+    var onEdit: (() -> Void)? = nil
     
     var body: some View {
         HStack(spacing: 12) {
@@ -20,32 +21,40 @@ struct TaskRow: View {
             }
             .buttonStyle(.plain)
             
-            // Task content
-            VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
-                    .font(.body)
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
-                    .strikethrough(task.isCompleted, color: .secondary)
-                
-                HStack(spacing: 8) {
-                    // Category badge
-                    if let category = task.category {
-                        CategoryBadge(category: category)
+            // Task content - tappable to edit (expands to fill available space)
+            Button {
+                onEdit?()
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(task.title)
+                            .font(.body)
+                            .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                            .strikethrough(task.isCompleted, color: .secondary)
+                        
+                        HStack(spacing: 8) {
+                            // Category badge
+                            if let category = task.category {
+                                CategoryBadge(category: category)
+                            }
+                            
+                            // Deadline
+                            if let deadline = task.deadline {
+                                DeadlineBadge(deadline: deadline, isCompleted: task.isCompleted)
+                            }
+                        }
                     }
                     
-                    // Deadline
-                    if let deadline = task.deadline {
-                        DeadlineBadge(deadline: deadline, isCompleted: task.isCompleted)
-                    }
+                    Spacer()
+                    
+                    // Task type indicator
+                    Image(systemName: task.taskType.iconName)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
-            
-            Spacer()
-            
-            // Task type indicator
-            Image(systemName: task.taskType.iconName)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())

@@ -7,6 +7,7 @@ struct AddTaskView: View {
     @Query(sort: \Category.name) private var categories: [Category]
     
     let defaultTaskType: TaskType
+    let taskToEdit: Task?
     
     @State private var title = ""
     @State private var selectedTaskType: TaskType
@@ -15,9 +16,26 @@ struct AddTaskView: View {
     @State private var deadline = Date()
     @State private var showingNewCategory = false
     
-    init(defaultTaskType: TaskType = .weekly) {
+    init(defaultTaskType: TaskType = .weekly, taskToEdit: Task? = nil) {
         self.defaultTaskType = defaultTaskType
-        _selectedTaskType = State(initialValue: defaultTaskType)
+        self.taskToEdit = taskToEdit
+        
+        if let task = taskToEdit {
+            _selectedTaskType = State(initialValue: task.taskType)
+            _title = State(initialValue: task.title)
+            _selectedCategory = State(initialValue: task.category)
+            _hasDeadline = State(initialValue: task.deadline != nil)
+            
+            // For daily tasks, if editing, use the time from the deadline
+            // For other tasks, use the deadline date as-is
+            if let deadline = task.deadline {
+                _deadline = State(initialValue: deadline)
+            } else {
+                _deadline = State(initialValue: Date())
+            }
+        } else {
+            _selectedTaskType = State(initialValue: defaultTaskType)
+        }
     }
     
     private var canSave: Bool {
@@ -90,17 +108,28 @@ struct AddTaskView: View {
                     Toggle("Set Deadline", isOn: $hasDeadline.animation())
                     
                     if hasDeadline {
-                        DatePicker(
-                            "Due Date",
-                            selection: $deadline,
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.graphical)
-                        .tint(.orange)
+                        if selectedTaskType == .daily {
+                            // For daily tasks, show time picker (date is implied as today)
+                            DatePicker(
+                                "Due Time",
+                                selection: $deadline,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .tint(.orange)
+                        } else {
+                            // For weekly/monthly tasks, show date picker
+                            DatePicker(
+                                "Due Date",
+                                selection: $deadline,
+                                displayedComponents: .date
+                            )
+                            .datePickerStyle(.graphical)
+                            .tint(.orange)
+                        }
                     }
                 }
             }
-            .navigationTitle("New Task")
+            .navigationTitle(taskToEdit == nil ? "New Task" : "Edit Task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -122,6 +151,17 @@ struct AddTaskView: View {
                     selectedCategory = newCategory
                 }
             }
+            .onChange(of: selectedTaskType) { oldType, newType in
+                // When switching to daily task type, if deadline exists, extract time and set to today
+                if hasDeadline && newType == .daily {
+                    let calendar = Calendar.current
+                    let timeComponents = calendar.dateComponents([.hour, .minute], from: deadline)
+                    deadline = calendar.date(bySettingHour: timeComponents.hour ?? 0,
+                                            minute: timeComponents.minute ?? 0,
+                                            second: 0,
+                                            of: Date()) ?? Date()
+                }
+            }
         }
     }
     
@@ -129,14 +169,40 @@ struct AddTaskView: View {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else { return }
         
-        let task = Task(
-            title: trimmedTitle,
-            taskType: selectedTaskType,
-            category: selectedCategory,
-            deadline: hasDeadline ? deadline : nil
-        )
+        // For daily tasks with deadline, combine today's date with selected time
+        var finalDeadline: Date? = nil
+        if hasDeadline {
+            if selectedTaskType == .daily {
+                // Combine today's date with the selected time
+                let calendar = Calendar.current
+                let today = Date()
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: deadline)
+                finalDeadline = calendar.date(bySettingHour: timeComponents.hour ?? 0,
+                                              minute: timeComponents.minute ?? 0,
+                                              second: 0,
+                                              of: today)
+            } else {
+                // For weekly/monthly, use the date as-is
+                finalDeadline = deadline
+            }
+        }
         
-        modelContext.insert(task)
+        if let task = taskToEdit {
+            // Update existing task
+            task.title = trimmedTitle
+            task.taskType = selectedTaskType
+            task.category = selectedCategory
+            task.deadline = finalDeadline
+        } else {
+            // Create new task
+            let task = Task(
+                title: trimmedTitle,
+                taskType: selectedTaskType,
+                category: selectedCategory,
+                deadline: finalDeadline
+            )
+            modelContext.insert(task)
+        }
         
         // Haptic feedback
         let generator = UINotificationFeedbackGenerator()

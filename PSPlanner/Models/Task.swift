@@ -24,7 +24,7 @@ enum TaskType: String, Codable, CaseIterable {
 }
 
 @Model
-final class Task {
+final class Task: Identifiable {
     var id: UUID
     var title: String
     var taskType: TaskType

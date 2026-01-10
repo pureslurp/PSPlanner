@@ -152,6 +152,14 @@ extension Date {
     /// Format deadline for display with relative indicator
     var deadlineString: String {
         let days = daysUntil
+        let calendar = Calendar.current
+        
+        // If deadline is today, show time (for daily tasks)
+        if calendar.isDateInToday(self) {
+            let formatter = DateFormatter()
+            formatter.timeStyle = .short
+            return "Due at \(formatter.string(from: self))"
+        }
         
         if days < 0 {
             let absDays = abs(days)

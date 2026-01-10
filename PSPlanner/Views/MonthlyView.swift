@@ -7,6 +7,8 @@ struct MonthlyView: View {
     
     @State private var currentMonth = Date()
     @State private var showingCategories = false
+    @State private var showingEditTask = false
+    @State private var taskToEdit: Task?
     
     private var monthlyTasks: [Task] {
         allTasks.filter { task in
@@ -59,7 +61,10 @@ struct MonthlyView: View {
                         if !incompleteTasks.isEmpty {
                             Section {
                                 ForEach(incompleteTasks) { task in
-                                    TaskRow(task: task)
+                                    TaskRow(task: task) {
+                                        taskToEdit = task
+                                        showingEditTask = true
+                                    }
                                 }
                                 .onDelete(perform: deleteIncompleteTasks)
                             }
@@ -68,7 +73,10 @@ struct MonthlyView: View {
                         if !completedTasks.isEmpty {
                             Section("Completed") {
                                 ForEach(completedTasks) { task in
-                                    TaskRow(task: task)
+                                    TaskRow(task: task) {
+                                        taskToEdit = task
+                                        showingEditTask = true
+                                    }
                                 }
                                 .onDelete(perform: deleteCompletedTasks)
                             }
@@ -93,6 +101,18 @@ struct MonthlyView: View {
             }
             .sheet(isPresented: $showingCategories) {
                 CategoriesView()
+            }
+            .sheet(isPresented: $showingEditTask) {
+                Group {
+                    if let task = taskToEdit {
+                        AddTaskView(defaultTaskType: task.taskType, taskToEdit: task)
+                    } else {
+                        EmptyView()
+                    }
+                }
+                .onDisappear {
+                    taskToEdit = nil
+                }
             }
         }
     }
