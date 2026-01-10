@@ -1,8 +1,8 @@
-# PS Planner - Project Plan
+# Gotta - Project Plan
 
 ## Overview
 
-PS Planner is a simple iOS app for personal task/to-do list management. The app organizes tasks by time period (daily, weekly, monthly) with the weekly view as the default. Each task can have an optional category and deadline.
+Gotta is a simple iOS app for personal task/to-do list management. The app organizes tasks by time period (daily, weekly, monthly) with the weekly view as the default. Each task can have an optional category and deadline. The name "Gotta" comes from the slang phrase "got to do it!" - capturing that feeling of "I gotta do this, I gotta do that..."
 
 ## User Requirements
 

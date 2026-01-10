@@ -1,6 +1,6 @@
 //
 //  WelcomeView.swift
-//  PSPlanner
+//  Gotta
 //
 //  Created by Sean Raymor on 1/9/26.
 //
@@ -15,30 +15,30 @@ struct WelcomeView: View {
         OnboardingPage(
             icon: "checkmark.circle.fill",
             iconColor: .orange,
-            title: "Welcome to PS Planner",
-            subtitle: "Your personal task organizer",
-            description: "Stay on top of your daily, weekly, and monthly tasks with a simple, beautiful interface."
+            title: "Welcome to Gotta",
+            subtitle: "Got to do it!",
+            description: "You know that feeling? 'I gotta do this, I gotta do that...' Well, now you've got Gotta! A simple way to track all the things you've got to do, organized by when you gotta do 'em."
         ),
         OnboardingPage(
             icon: "calendar.badge.clock",
             iconColor: .blue,
             title: "Organize by Time",
             subtitle: "Daily • Weekly • Monthly",
-            description: "Break down your tasks by time period. Focus on today's priorities or plan ahead for the month."
+            description: "Break down your tasks by time period. Focus on today's priorities or plan ahead for the month ahead."
         ),
         OnboardingPage(
             icon: "folder.fill",
             iconColor: .green,
             title: "Categories & Colors",
             subtitle: "Keep everything organized",
-            description: "Group tasks by category like Home, Work, or Errands. Each with its own color for easy recognition."
+            description: "Group tasks by category like Home, Work, or Errands. Each with its own color so you can spot 'em at a glance."
         ),
         OnboardingPage(
             icon: "clock.badge.checkmark.fill",
             iconColor: .cyan,
             title: "Never Miss a Deadline",
             subtitle: "Smart task visibility",
-            description: "Set deadlines on tasks and they'll appear in your daily view when due. Incomplete tasks carry forward until done."
+            description: "Set deadlines on tasks and they'll show up in your daily view when due. Incomplete tasks stick around until you get 'em done."
         )
     ]
     

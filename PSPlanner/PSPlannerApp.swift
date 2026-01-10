@@ -1,6 +1,6 @@
 //
 //  PSPlannerApp.swift
-//  PSPlanner
+//  Gotta
 //
 //  Created by Sean Raymor on 1/9/26.
 //

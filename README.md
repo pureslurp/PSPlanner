@@ -1,6 +1,6 @@
-# PS Planner - SwiftUI
+# Gotta - SwiftUI
 
-A simple, elegant task planner for iOS built with SwiftUI and SwiftData.
+A simple, elegant task planner for iOS built with SwiftUI and SwiftData. Got to do it!
 
 ## Features
 
