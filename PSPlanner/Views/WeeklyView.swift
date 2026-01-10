@@ -10,18 +10,24 @@ struct WeeklyView: View {
     
     private var weeklyTasks: [Task] {
         allTasks.filter { task in
-            // Weekly tasks: show if incomplete (carry forward) OR completed this week
+            // Weekly tasks
             if task.taskType == .weekly {
+                // Only show tasks created in or before the current week (carry forward, not backward)
+                guard task.createdAt.startOfWeek <= currentWeek.startOfWeek else {
+                    return false
+                }
+                
+                // Show if incomplete (carry forward) OR completed this week
                 if !task.isCompleted {
-                    // Incomplete weekly tasks always show (carry forward)
-                    return true
-                } else if let completedAt = task.completedAt, completedAt.isInWeek(of: currentWeek) {
-                    // Completed weekly tasks show only in the week they were completed
                     return true
                 }
+                if let completedAt = task.completedAt, completedAt.isInWeek(of: currentWeek) {
+                    return true
+                }
+                return false
             }
             
-            // Deadline promotion: show monthly tasks with deadline this week
+            // Deadline promotion: monthly tasks with deadline this week
             if task.taskType == .monthly, let deadline = task.deadline, deadline.isInWeek(of: currentWeek) {
                 return true
             }

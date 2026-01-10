@@ -10,9 +10,14 @@ struct DailyView: View {
     
     private var dailyTasks: [Task] {
         allTasks.filter { task in
-            switch task.taskType {
-            case .daily:
-                // Daily tasks: show if incomplete (carry forward) OR completed today
+            // Daily tasks
+            if task.taskType == .daily {
+                // Only show tasks created on or before the current date (no future tasks, no past viewing of future tasks)
+                guard task.createdAt.startOfDay <= currentDate.startOfDay else {
+                    return false
+                }
+                
+                // Show if incomplete (carry forward) OR completed on this date
                 if !task.isCompleted {
                     return true
                 }
@@ -20,14 +25,17 @@ struct DailyView: View {
                     return true
                 }
                 return false
-                
-            case .weekly, .monthly:
-                // Weekly/monthly tasks: ONLY show if they have a deadline set to today
-                guard let deadline = task.deadline else {
-                    return false // No deadline = don't show in Daily
-                }
-                return deadline.isSameDay(as: currentDate)
             }
+            
+            // Deadline promotion: weekly/monthly tasks with deadline today
+            if task.taskType == .weekly || task.taskType == .monthly {
+                if let deadline = task.deadline, deadline.isSameDay(as: currentDate) {
+                    return true
+                }
+                return false
+            }
+            
+            return false
         }
     }
     

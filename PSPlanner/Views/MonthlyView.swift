@@ -10,14 +10,19 @@ struct MonthlyView: View {
     
     private var monthlyTasks: [Task] {
         allTasks.filter { task in
-            // Monthly tasks: show if incomplete (carry forward) OR completed this month
+            // Monthly tasks only
             guard task.taskType == .monthly else { return false }
             
+            // Only show tasks created in or before the current month (carry forward, not backward)
+            guard task.createdAt.startOfMonth <= currentMonth.startOfMonth else {
+                return false
+            }
+            
+            // Show if incomplete (carry forward) OR completed this month
             if !task.isCompleted {
-                // Incomplete monthly tasks always show (carry forward)
                 return true
-            } else if let completedAt = task.completedAt, completedAt.isInMonth(of: currentMonth) {
-                // Completed monthly tasks show only in the month they were completed
+            }
+            if let completedAt = task.completedAt, completedAt.isInMonth(of: currentMonth) {
                 return true
             }
             

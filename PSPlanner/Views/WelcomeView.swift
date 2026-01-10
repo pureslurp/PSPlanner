@@ -34,11 +34,11 @@ struct WelcomeView: View {
             description: "Group tasks by category like Home, Work, or Errands. Each with its own color for easy recognition."
         ),
         OnboardingPage(
-            icon: "icloud.fill",
+            icon: "clock.badge.checkmark.fill",
             iconColor: .cyan,
-            title: "Synced Everywhere",
-            subtitle: "Powered by iCloud",
-            description: "Your tasks sync automatically across all your Apple devices. No account needed — just your Apple ID."
+            title: "Never Miss a Deadline",
+            subtitle: "Smart task visibility",
+            description: "Set deadlines on tasks and they'll appear in your daily view when due. Incomplete tasks carry forward until done."
         )
     ]
     
