@@ -3,6 +3,7 @@ import SwiftData
 
 struct TaskRow: View {
     @Bindable var task: Task
+    @Environment(\.modelContext) private var modelContext
     var onEdit: (() -> Void)? = nil
     
     var body: some View {
@@ -10,7 +11,7 @@ struct TaskRow: View {
             // Checkbox
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    task.toggleCompletion()
+                    handleTaskCompletion()
                     triggerHaptic()
                 }
             } label: {
@@ -63,6 +64,38 @@ struct TaskRow: View {
     private func triggerHaptic() {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
+    }
+    
+    private func handleTaskCompletion() {
+        let wasCompleted = task.isCompleted
+        task.toggleCompletion()
+        let isNowCompleted = task.isCompleted
+        
+        // Handle notifications
+        _Concurrency.Task {
+            // If task was just completed and has a deadline, cancel its notification
+            if isNowCompleted && !wasCompleted && task.deadline != nil {
+                await NotificationManager.shared.cancelNotification(for: task)
+            }
+            
+            // Reschedule recurring notifications since task completion status changed
+            await rescheduleRecurringNotifications()
+        }
+    }
+    
+    private func rescheduleRecurringNotifications() async {
+        // Fetch all incomplete tasks
+        let descriptor = FetchDescriptor<Task>(
+            predicate: #Predicate<Task> { !$0.isCompleted },
+            sortBy: [SortDescriptor(\.createdAt)]
+        )
+        
+        do {
+            let allTasks = try modelContext.fetch(descriptor)
+            await NotificationManager.shared.rescheduleRecurringNotifications(incompleteTasks: allTasks)
+        } catch {
+            print("Failed to fetch tasks for recurring notifications: \(error)")
+        }
     }
 }
 

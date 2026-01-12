@@ -187,12 +187,21 @@ struct AddTaskView: View {
             }
         }
         
+        let savedTask: Task
         if let task = taskToEdit {
+            // Cancel old notification if task had a deadline
+            if task.deadline != nil {
+                _Concurrency.Task {
+                    await NotificationManager.shared.cancelNotification(for: task)
+                }
+            }
+            
             // Update existing task
             task.title = trimmedTitle
             task.taskType = selectedTaskType
             task.category = selectedCategory
             task.deadline = finalDeadline
+            savedTask = task
         } else {
             // Create new task
             let task = Task(
@@ -202,6 +211,25 @@ struct AddTaskView: View {
                 deadline: finalDeadline
             )
             modelContext.insert(task)
+            savedTask = task
+        }
+        
+        // Save context first
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save task: \(error)")
+        }
+        
+        // Schedule notifications
+        _Concurrency.Task {
+            // Schedule notification for task with deadline
+            if savedTask.deadline != nil {
+                await NotificationManager.shared.scheduleNotification(for: savedTask)
+            }
+            
+            // Reschedule recurring notifications for tasks without deadlines
+            await rescheduleRecurringNotifications()
         }
         
         // Haptic feedback
@@ -209,6 +237,21 @@ struct AddTaskView: View {
         generator.notificationOccurred(.success)
         
         dismiss()
+    }
+    
+    private func rescheduleRecurringNotifications() async {
+        // Fetch all incomplete tasks
+        let descriptor = FetchDescriptor<Task>(
+            predicate: #Predicate<Task> { !$0.isCompleted },
+            sortBy: [SortDescriptor(\.createdAt)]
+        )
+        
+        do {
+            let allTasks = try modelContext.fetch(descriptor)
+            await NotificationManager.shared.rescheduleRecurringNotifications(incompleteTasks: allTasks)
+        } catch {
+            print("Failed to fetch tasks for recurring notifications: \(error)")
+        }
     }
 }
 

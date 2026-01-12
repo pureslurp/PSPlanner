@@ -13,6 +13,7 @@ struct RootView: View {
     @Query private var categories: [Category]
     
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @State private var hasSeededCategories = false
     
     var body: some View {
@@ -28,11 +29,19 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.4), value: hasCompletedOnboarding)
         .onAppear {
             seedDefaultCategoriesIfNeeded()
+            // Use fully qualified name to disambiguate from SwiftData Task model
+            _Concurrency.Task {
+                await requestNotificationPermission()
+            }
         }
         .onChange(of: hasCompletedOnboarding) { _, newValue in
             if newValue {
                 // Seed categories when onboarding completes (in case they weren't seeded)
                 seedDefaultCategoriesIfNeeded()
+                // Use fully qualified name to disambiguate from SwiftData Task model
+                _Concurrency.Task {
+                    await requestNotificationPermission()
+                }
             }
         }
     }
@@ -55,6 +64,13 @@ struct RootView: View {
         } catch {
             print("Failed to seed default categories: \(error)")
         }
+    }
+    
+    private func requestNotificationPermission() async {
+        // Only request if notifications are enabled by user
+        guard notificationsEnabled else { return }
+        
+        _ = await NotificationManager.shared.requestAuthorization()
     }
 }
 

@@ -7,6 +7,7 @@ struct DailyView: View {
     
     @State private var currentDate = Date()
     @State private var showingCategories = false
+    @State private var showingSettings = false
     @State private var showingEditTask = false
     @State private var taskToEdit: Task?
     
@@ -103,6 +104,12 @@ struct DailyView: View {
                         } label: {
                             Label("Manage Categories", systemImage: "folder")
                         }
+                        
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Label("Settings", systemImage: "gearshape")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
@@ -110,6 +117,9 @@ struct DailyView: View {
             }
             .sheet(isPresented: $showingCategories) {
                 CategoriesView()
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
             .sheet(isPresented: $showingEditTask) {
                 Group {
@@ -127,14 +137,41 @@ struct DailyView: View {
     }
     
     private func deleteIncompleteTasks(at offsets: IndexSet) {
+        var deletedTasks: [Task] = []
         for index in offsets {
-            modelContext.delete(incompleteTasks[index])
+            let task = incompleteTasks[index]
+            deletedTasks.append(task)
+            modelContext.delete(task)
+        }
+        
+        // Cancel notifications and reschedule recurring notifications
+        _Concurrency.Task {
+            for task in deletedTasks {
+                if task.deadline != nil {
+                    await NotificationManager.shared.cancelNotification(for: task)
+                }
+            }
+            await rescheduleRecurringNotifications()
         }
     }
     
     private func deleteCompletedTasks(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(completedTasks[index])
+        }
+    }
+    
+    private func rescheduleRecurringNotifications() async {
+        let descriptor = FetchDescriptor<Task>(
+            predicate: #Predicate<Task> { !$0.isCompleted },
+            sortBy: [SortDescriptor(\.createdAt)]
+        )
+        
+        do {
+            let allTasks = try modelContext.fetch(descriptor)
+            await NotificationManager.shared.rescheduleRecurringNotifications(incompleteTasks: allTasks)
+        } catch {
+            print("Failed to fetch tasks for recurring notifications: \(error)")
         }
     }
 }
