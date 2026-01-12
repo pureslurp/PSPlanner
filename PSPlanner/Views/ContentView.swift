@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var selectedTab = 1 // Default to Weekly (middle tab)
     @State private var showingAddTask = false
     @State private var showingCategories = false
+    @State private var taskTypeForNewTask: TaskType = .weekly
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -28,9 +29,19 @@ struct ContentView: View {
                     .tag(2)
             }
             .tint(.orange)
+            .onChange(of: selectedTab) { _, newValue in
+                // Update task type when tab changes
+                taskTypeForNewTask = taskTypeForTab(newValue)
+            }
+            .onAppear {
+                // Set initial task type
+                taskTypeForNewTask = taskTypeForTab(selectedTab)
+            }
             
             // Floating Action Button
             Button {
+                // Capture current tab's task type at button press time
+                taskTypeForNewTask = taskTypeForTab(selectedTab)
                 showingAddTask = true
             } label: {
                 Image(systemName: "plus")
@@ -45,15 +56,15 @@ struct ContentView: View {
             .padding(.bottom, 80)
         }
         .sheet(isPresented: $showingAddTask) {
-            AddTaskView(defaultTaskType: currentTaskType)
+            AddTaskView(defaultTaskType: taskTypeForNewTask)
         }
         .sheet(isPresented: $showingCategories) {
             CategoriesView()
         }
     }
     
-    private var currentTaskType: TaskType {
-        switch selectedTab {
+    private func taskTypeForTab(_ tab: Int) -> TaskType {
+        switch tab {
         case 0: return .daily
         case 2: return .monthly
         default: return .weekly

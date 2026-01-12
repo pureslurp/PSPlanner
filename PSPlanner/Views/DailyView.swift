@@ -8,7 +8,6 @@ struct DailyView: View {
     @State private var currentDate = Date()
     @State private var showingCategories = false
     @State private var showingSettings = false
-    @State private var showingEditTask = false
     @State private var taskToEdit: Task?
     
     private var dailyTasks: [Task] {
@@ -73,7 +72,6 @@ struct DailyView: View {
                                 ForEach(incompleteTasks) { task in
                                     TaskRow(task: task) {
                                         taskToEdit = task
-                                        showingEditTask = true
                                     }
                                 }
                                 .onDelete(perform: deleteIncompleteTasks)
@@ -85,7 +83,6 @@ struct DailyView: View {
                                 ForEach(completedTasks) { task in
                                     TaskRow(task: task) {
                                         taskToEdit = task
-                                        showingEditTask = true
                                     }
                                 }
                                 .onDelete(perform: deleteCompletedTasks)
@@ -121,17 +118,8 @@ struct DailyView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
-            .sheet(isPresented: $showingEditTask) {
-                Group {
-                    if let task = taskToEdit {
-                        AddTaskView(defaultTaskType: task.taskType, taskToEdit: task)
-                    } else {
-                        EmptyView()
-                    }
-                }
-                .onDisappear {
-                    taskToEdit = nil
-                }
+            .sheet(item: $taskToEdit) { task in
+                AddTaskView(defaultTaskType: task.taskType, taskToEdit: task)
             }
         }
     }

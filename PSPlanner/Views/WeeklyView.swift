@@ -8,7 +8,6 @@ struct WeeklyView: View {
     @State private var currentWeek = Date()
     @State private var showingCategories = false
     @State private var showingSettings = false
-    @State private var showingEditTask = false
     @State private var taskToEdit: Task?
     
     private var weeklyTasks: [Task] {
@@ -70,7 +69,6 @@ struct WeeklyView: View {
                                 ForEach(incompleteTasks) { task in
                                     TaskRow(task: task) {
                                         taskToEdit = task
-                                        showingEditTask = true
                                     }
                                 }
                                 .onDelete(perform: deleteIncompleteTasks)
@@ -82,7 +80,6 @@ struct WeeklyView: View {
                                 ForEach(completedTasks) { task in
                                     TaskRow(task: task) {
                                         taskToEdit = task
-                                        showingEditTask = true
                                     }
                                 }
                                 .onDelete(perform: deleteCompletedTasks)
@@ -118,17 +115,8 @@ struct WeeklyView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
-            .sheet(isPresented: $showingEditTask) {
-                Group {
-                    if let task = taskToEdit {
-                        AddTaskView(defaultTaskType: task.taskType, taskToEdit: task)
-                    } else {
-                        EmptyView()
-                    }
-                }
-                .onDisappear {
-                    taskToEdit = nil
-                }
+            .sheet(item: $taskToEdit) { task in
+                AddTaskView(defaultTaskType: task.taskType, taskToEdit: task)
             }
         }
     }

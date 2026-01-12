@@ -13,11 +13,12 @@ struct WelcomeView: View {
     
     private let pages: [OnboardingPage] = [
         OnboardingPage(
-            icon: "checkmark.circle.fill",
+            icon: "AppIconImage",
             iconColor: .orange,
             title: "Welcome to Gotta",
             subtitle: "Got to do it!",
-            description: "You know that feeling? 'I gotta do this, I gotta do that...' Well, now you've got Gotta! A simple way to track all the things you've got to do, organized by when you gotta do 'em."
+            description: "You know that feeling? 'I gotta do this, I gotta do that...' Well, now you've got Gotta! A simple way to track all the things you've got to do, organized by when you gotta do 'em.",
+            isAppIcon: true
         ),
         OnboardingPage(
             icon: "calendar.badge.clock",
@@ -127,6 +128,16 @@ struct OnboardingPage {
     let title: String
     let subtitle: String
     let description: String
+    let isAppIcon: Bool
+    
+    init(icon: String, iconColor: Color, title: String, subtitle: String, description: String, isAppIcon: Bool = false) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.subtitle = subtitle
+        self.description = description
+        self.isAppIcon = isAppIcon
+    }
 }
 
 // MARK: - Onboarding Page View
@@ -143,9 +154,17 @@ struct OnboardingPageView: View {
                     .fill(page.iconColor.opacity(0.15))
                     .frame(width: 140, height: 140)
                 
-                Image(systemName: page.icon)
-                    .font(.system(size: 60))
-                    .foregroundStyle(page.iconColor)
+                if page.isAppIcon {
+                    Image(page.icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                } else {
+                    Image(systemName: page.icon)
+                        .font(.system(size: 60))
+                        .foregroundStyle(page.iconColor)
+                }
             }
             
             // Text content
