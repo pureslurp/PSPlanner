@@ -30,6 +30,7 @@ final class Task: Identifiable {
     var taskType: TaskType
     var category: Category?
     var deadline: Date?
+    var notes: String?
     var isCompleted: Bool
     var completedAt: Date?
     var createdAt: Date
@@ -40,6 +41,7 @@ final class Task: Identifiable {
         taskType: TaskType = .weekly,
         category: Category? = nil,
         deadline: Date? = nil,
+        notes: String? = nil,
         isCompleted: Bool = false,
         completedAt: Date? = nil,
         createdAt: Date = Date()
@@ -49,6 +51,7 @@ final class Task: Identifiable {
         self.taskType = taskType
         self.category = category
         self.deadline = deadline
+        self.notes = notes
         self.isCompleted = isCompleted
         self.completedAt = completedAt
         self.createdAt = createdAt

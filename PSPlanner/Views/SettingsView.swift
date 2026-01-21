@@ -4,6 +4,7 @@ import UserNotifications
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
+    @AppStorage("defaultTabIndex") private var defaultTabIndex = 1 // Default to Weekly (1)
     @State private var authorizationStatus: UNAuthorizationStatus = .notDetermined
     @State private var isCheckingStatus = false
     
@@ -37,6 +38,21 @@ struct SettingsView: View {
                     Text("Notifications")
                 } footer: {
                     Text("Get reminded about tasks with deadlines or receive daily, weekly, and monthly reminders for tasks without deadlines.")
+                }
+                
+                Section {
+                    Picker("Default View", selection: $defaultTabIndex) {
+                        Label("Daily", systemImage: "sun.max")
+                            .tag(0)
+                        Label("Weekly", systemImage: "calendar")
+                            .tag(1)
+                        Label("Monthly", systemImage: "calendar.badge.clock")
+                            .tag(2)
+                    }
+                } header: {
+                    Text("Appearance")
+                } footer: {
+                    Text("Choose which view to show when you open the app.")
                 }
                 
                 #if DEBUG

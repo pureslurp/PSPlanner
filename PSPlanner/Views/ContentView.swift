@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @State private var selectedTab = 1 // Default to Weekly (middle tab)
+    @AppStorage("defaultTabIndex") private var defaultTabIndex = 1 // Default to Weekly (1)
+    @State private var selectedTab = 1
     @State private var showingAddTask = false
     @State private var showingCategories = false
     @State private var taskTypeForNewTask: TaskType = .weekly
@@ -29,13 +30,18 @@ struct ContentView: View {
                     .tag(2)
             }
             .tint(.orange)
+            .onAppear {
+                // Set initial tab from user preference
+                selectedTab = defaultTabIndex
+                taskTypeForNewTask = taskTypeForTab(selectedTab)
+            }
             .onChange(of: selectedTab) { _, newValue in
                 // Update task type when tab changes
                 taskTypeForNewTask = taskTypeForTab(newValue)
             }
-            .onAppear {
-                // Set initial task type
-                taskTypeForNewTask = taskTypeForTab(selectedTab)
+            .onChange(of: defaultTabIndex) { _, newValue in
+                // If user changes default view in settings while app is open, switch to it
+                selectedTab = newValue
             }
             
             // Floating Action Button
